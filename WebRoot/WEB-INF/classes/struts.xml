@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.1//EN" "http://struts.apache.org/dtds/struts-2.1.dtd">
+<struts>
+	<!-- 开发模式，发布时要改为false -->
+	<constant name="struts.devMode" value="false" />
+	<constant name="struts.i18n.encoding" value="utf-8"/>
+	<!-- Action后缀.do -->
+	<constant name="struts.action.extension" value="do" />
+	<!-- Action动态方法调用，如：action!method.do -->
+	<constant name="struts.enable.DynamicMethodInvocation" value="true" />
+	<!-- 返回jsonpackage -->
+	<package name="jsonPackage" namespace="/" extends="json-default">
+	</package>
+	
+	
+	
+	<package name="default" namespace="/" extends="struts-default,json-default">
+		<interceptors>
+			<interceptor name="demoInterceptor" class="com.demo01.interceptor.DemoInterceptor"/>
+			<interceptor name="loginInterceptor" class="com.demo01.interceptor.UserLoginInterceptor"/>
+			<!-- 新建一个拦截器栈 将自定义拦截器和默认拦截器栈放进去 -->
+			<interceptor-stack name="mydemoStack">
+				<interceptor-ref name="demoInterceptor">
+					<param name="auth">1</param>
+				</interceptor-ref>
+				<interceptor-ref name="defaultStack"/>
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="mydemoStack"/>
+		<global-results>
+			<result name="input">/${proxy.namespace}/${proxy.actionName}/${proxy.method}.jsp</result>
+			<result name="error">/error.jsp</result>
+			<result name="api"></result>
+			<result name="exception">/exception.jsp</result>
+			<result name="jsonstr" type="json">
+				<param name="root">jsonRes</param>
+			</result>
+		</global-results>
+		
+		<action name="demoAction" class="com.demo01.action.DemoAction">
+			<interceptor-ref name="loginInterceptor"/>
+			<interceptor-ref name="defaultStack"/>
+			<result name="download" type="stream">
+				<param name="contentType">image/jpeg</param>
+        		 <param name="contentDisposition">attachment;filename="${fileName}"</param>
+				<param name="inputName">imageStream</param>
+				<param name="bufferSize">2048</param>
+			</result>
+		</action>
+		
+		<action name="message" class="com.demo01.action.MessageAction"></action>
+		<action name="token" class="com.demo01.action.GenerateTokenAction">
+			<result name="form">/form.jsp</result>
+			<result name="formsuccess" type="redirect">/success.jsp</result>
+		</action>
+		<action name="userAction" class="com.demo01.action.UserAction">
+			<interceptor-ref name="fileUpload">
+				<param name="maximumSize">409600</param>
+				<param name="allowedTypes">
+					image/bmp,image/png,image/gif,image/jpeg,image/pjpeg
+				</param>
+			</interceptor-ref>
+			<interceptor-ref name="defaultStack" />
+		</action>
+	</package>
+</struts>    
